@@ -19,14 +19,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lwip/inet.h"
 #include "lwip/sockets.h"
+#include "netif/xadapter.h"
 #include "lwipopts.h"
-#ifdef __arm__
 #include "xil_printf.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#endif
 
 /* Header files needed to handle with switches */
 #include "xparameters.h"
@@ -62,7 +60,7 @@ void rx_data()
 	 XGpio_SetDataDirection(&leds, 1, 0x00000000);
 
 	/* Set here the host (Other board) IP address */
-	IP4_ADDR(&servaddr,  192, 168,   1, 20);
+	IP4_ADDR(&servaddr, 147, 83,   81, 221);
 
 	while(1)
 	{

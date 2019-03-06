@@ -22,7 +22,7 @@
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
-#include "lwipopts.h"
+//#include "lwipopts.h"
 
 #include "config_apps.h"
 #include "xil_printf.h"
@@ -125,7 +125,7 @@ void tx_data()
 	size = sizeof(remote);
 
 	/* Switch inizialization */
-	XGpio_Initialize(&dip, XPAR_SWTCH_DEVICE_ID);
+	XGpio_Initialize(&dip, XPAR_SWS_DEVICE_ID);
 	XGpio_SetDataDirection(&dip, 1, 0xffffffff);
 	
 	ncons=0;

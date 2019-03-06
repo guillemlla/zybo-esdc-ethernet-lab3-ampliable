@@ -17,25 +17,17 @@
  */
 
 #include <stdio.h>
-
 #include "xparameters.h"
-#include "lwipopts.h"
-
-#include "platform_config.h"
-
-#include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include "lwip/init.h"
 #include "netif/xadapter.h"
-#include "lwip/dhcp.h"
-#include "config_apps.h"
-#include "task.h"
-#include "portmacro.h"
+#include "platform_config.h"
 #include "xil_printf.h"
 
 int main_thread();
 void print_headers();
 void print_echo_app_header();
+
+#define THREAD_STACKSIZE 2048 // Empirically chosen
+
 
 void print_ip(char *msg, struct ip_addr *ip)
 {
@@ -73,15 +65,15 @@ void network_init()
     /* the mac address of the board. this should be unique per board */
     /* Check Atenea for a list of valid MAC address for each board*/
     /* 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 is not valid! */
-    unsigned char mac_ethernet_address[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
+    unsigned char mac_ethernet_address[] = { 0x00, 0x16, 0x3e, 0x7f, 0x9f, 0x39 };
+// 2 	 00:16:3e:7f:9f:39	147.83.81.222
     netif = &server_netif;
 
     /* initliaze IP addresses to be used */
     /* Check Atenea for a list of valid IP address for each board*/
-    IP4_ADDR(&ipaddr,  192, 168,   1, 10);
+    IP4_ADDR(&ipaddr,  147, 83,   81, 222);
     IP4_ADDR(&netmask, 255, 255, 255,  0);
-    IP4_ADDR(&gw,      192, 168,   1,  1);
+    IP4_ADDR(&gw,      147, 83,   81,  1);
 
 
     /* print out IP settings of the board */
