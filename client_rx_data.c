@@ -36,13 +36,13 @@ u16_t rx_port = 10;
 
 void print_ip();
 
-
 /*
 * Client thread, connects to other board through port 10 (u16_t rx_port)
 *  
 */
 void rx_data()
 {
+	static int state = 0;
 	struct ip_addr servaddr;
 	int sock;
 	struct sockaddr_in serv_addr;
@@ -64,52 +64,60 @@ void rx_data()
 
 	while(1)
 	{
-
-		if ((sock = lwip_socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-			xil_printf("error creating socket\r\n");
-			vTaskDelete(NULL);
-			return;
-		}
-
-		memset((void*)&serv_addr, 0, sizeof serv_addr);
-		serv_addr.sin_family = AF_INET;
-		serv_addr.sin_port = htons(rx_port);
-		serv_addr.sin_addr.s_addr = servaddr.addr;
-
-		print_ip("connect to  ", &servaddr);
-		xil_printf("... ");
-
-		if (lwip_connect(sock, (struct sockaddr *)&serv_addr, sizeof (serv_addr)) == 0)
-			{
-			xil_printf("Connected!!\r\n");
-			break; /* If connected, this sentence forces to exit the while(1) and resumes at the point connected*/
-			}
-
-		close(sock); // If connection fails, close the socket before retrying
-
-		xil_printf("Connection not established. Please, press a button to retry\r\n");
-		psb_check = XGpio_DiscreteRead(&push, 1);
-		while (!psb_check)
+		switch (state)
 		{
-			vTaskDelay(100);
-			psb_check = XGpio_DiscreteRead(&push, 1);
+			case 0:
+				if ((sock = lwip_socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+					xil_printf("error creating socket\r\n");
+					break;
+				}
+				else
+					state = 1;
+			case 1:
+				memset((void*)&serv_addr, 0, sizeof serv_addr);
+				serv_addr.sin_family = AF_INET;
+				serv_addr.sin_port = htons(rx_port);
+				serv_addr.sin_addr.s_addr = servaddr.addr;
+
+				print_ip("connect to  ", &servaddr);
+				xil_printf("... ");
+
+				if (lwip_connect(sock, (struct sockaddr *)&serv_addr, sizeof (serv_addr)) == 0)
+				{
+					xil_printf("Connected!!\r\n");
+					state = 2;
+				}
+				else
+					state = 3;
+		
+			case 2:
+				if (read(sock, rx_buf, BUFF_SIZE) == 0);{
+					led_value = (int)rx_buf[0];
+					XGpio_DiscreteWrite(&leds, 1, led_value);
+					xil_printf("Data Received %x\r\n", led_value);
+				}
+				else {
+					xil_printf("Error reading data\r\n");
+					state = 4;
+				}
+			case 3:
+				xil_printf("Connection not established. Please, press a button to retry\r\n");
+				psb_check = XGpio_DiscreteRead(&push, 1);
+				while (!psb_check) {
+					vTaskDelay(50);
+					psb_check = XGpio_DiscreteRead(&push, 1);
+				}
+				state = 1
+
+		
+			case 4:
+				xil_printf("Closing socket %d\r\n", sock);
+				close(sock);
+				state = 0;
+
 		}
 
-
 	}
-	/* -------------------------------------- If Connected */
-		print_ip("Connected to  ", &servaddr);
-		xil_printf("Port %d", rx_port);
-
-	while (1)
-	{
-		read(sock, rx_buf, BUFF_SIZE);
-		led_value = (int)rx_buf[0];
-		XGpio_DiscreteWrite(&leds, 1, led_value);
-		xil_printf("Data Received %x\r\n", led_value);
-
-	}
-
 	close(sock);
 	vTaskDelete(NULL);
 	return;

@@ -12,7 +12,7 @@
  * 
  * This demo code is the starting point of Lab 3 of the ESDC course
  * UPC Telecom School, Barcelona
- * J. Altet/F. Moll, 2018
+ * J. Altet/F. Moll, 2019
  *
  */
 
@@ -21,6 +21,7 @@
 #include "netif/xadapter.h"
 #include "platform_config.h"
 #include "xil_printf.h"
+#include "lwip/init.h"
 
 int main_thread();
 void print_headers();
