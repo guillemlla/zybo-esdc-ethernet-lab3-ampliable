@@ -69,10 +69,11 @@ void rx_data()
 			case 0:
 				if ((sock = lwip_socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 					xil_printf("error creating socket\r\n");
-					break;
 				}
 				else
 					state = 1;
+				break;
+				
 			case 1:
 				memset((void*)&serv_addr, 0, sizeof serv_addr);
 				serv_addr.sin_family = AF_INET;
@@ -89,7 +90,8 @@ void rx_data()
 				}
 				else
 					state = 3;
-		
+				break;
+						
 			case 2:
 				if (read(sock, rx_buf, BUFF_SIZE) == 0);{
 					led_value = (int)rx_buf[0];
@@ -100,6 +102,8 @@ void rx_data()
 					xil_printf("Error reading data\r\n");
 					state = 4;
 				}
+				break;
+				
 			case 3:
 				xil_printf("Connection not established. Please, press a button to retry\r\n");
 				psb_check = XGpio_DiscreteRead(&push, 1);
@@ -107,13 +111,15 @@ void rx_data()
 					vTaskDelay(50);
 					psb_check = XGpio_DiscreteRead(&push, 1);
 				}
-				state = 1
+				state = 4
+				break;
 
 		
 			case 4:
 				xil_printf("Closing socket %d\r\n", sock);
 				close(sock);
 				state = 0;
+				break;
 
 		}
 
