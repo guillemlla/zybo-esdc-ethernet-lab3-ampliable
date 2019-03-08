@@ -13,6 +13,7 @@
  * This demo code is the starting point of Lab 3 of the ESDC course
  * UPC Telecom School, Barcelona
  * J. Altet/F. Moll, 2018
+ * Added state machine description March 2019
  *
  */
 
@@ -46,6 +47,7 @@ void rx_data()
 	struct ip_addr servaddr;
 	int sock;
 	struct sockaddr_in serv_addr;
+	int readflag;
 
 	char rx_buf[BUFF_SIZE]; //buffer to transmit
 
@@ -93,13 +95,13 @@ void rx_data()
 				break;
 						
 			case 2:
-				if (read(sock, rx_buf, BUFF_SIZE) == 0);{
+				if ((readflag=read(sock, rx_buf, BUFF_SIZE)) > 0){
 					led_value = (int)rx_buf[0];
 					XGpio_DiscreteWrite(&leds, 1, led_value);
 					xil_printf("Data Received %x\r\n", led_value);
 				}
 				else {
-					xil_printf("Error reading data\r\n");
+					xil_printf("Error reading data (%d)\r\n",readflag);
 					state = 4;
 				}
 				break;
@@ -111,7 +113,7 @@ void rx_data()
 					vTaskDelay(50);
 					psb_check = XGpio_DiscreteRead(&push, 1);
 				}
-				state = 4
+				state = 4;
 				break;
 
 		
