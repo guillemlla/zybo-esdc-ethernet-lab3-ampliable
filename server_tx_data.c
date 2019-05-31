@@ -37,6 +37,7 @@
 const int LSB_1 = 1;
 
 XGpio dip; // global variable for switches
+XGpio but; // global variable for buttons
 
 /* Port used for the transmission */
 u16_t my_port = 10;
@@ -57,6 +58,7 @@ void sw_to_net(void *p)
 	int BUFF_SIZE = 20;
 
     int dip_check_old, dip_check;
+    int but_value;
 
 
 	char tx_buf[BUFF_SIZE]; //buffer to transmit
@@ -71,6 +73,8 @@ void sw_to_net(void *p)
 	{
 		/* Reading from swithes. Sending information every time SW[0] changes value */
 		dip_check = XGpio_DiscreteRead(&dip, 1);
+		but_value = XGpio_DiscreteRead(&but, 1);
+
 		/* Checking if bit 0 has changed */
 		if ( (dip_check & LSB_1) ^ (dip_check_old & LSB_1) )
 				{
@@ -78,7 +82,8 @@ void sw_to_net(void *p)
 					xil_printf("New DIP status  %x\r\n", dip_check_old);
 
 					tx_buf[0] = (char) dip_check;
-					tx_buf[1] = '\0';
+					tx_buf[1] = (char) but_value;
+					tx_buf[2] = '\0';
 					if (( write(sd, tx_buf, TWO_CHARS)) < 0)
 								{
 									xil_printf("Error sending data\r\n");
@@ -125,9 +130,12 @@ void tx_data()
 	size = sizeof(remote);
 
 	/* Switch inizialization */
-	XGpio_Initialize(&dip, XPAR_SWS_DEVICE_ID);
+	XGpio_Initialize(&dip, XPAR_SWITCHES_DEVICE_ID);
 	XGpio_SetDataDirection(&dip, 1, 0xffffffff);
 	
+	XGpio_Initialize(&but,  XPAR_BUTTONS_DEVICE_ID);
+	XGpio_SetDataDirection(&but, 1, 0xffffffff);
+
 	ncons=0;
 
 	while (1)

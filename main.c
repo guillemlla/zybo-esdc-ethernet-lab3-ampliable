@@ -1,5 +1,5 @@
 /*
- * Part of this code was provided by Xilinx Inc. in  
+ * Part of this code was provided by Xilinx Inc. in
  * their application note XAPP1026.
  * Neither Xilinx nor UPC IS MAKING NO REPRESENTATION THAT THIS IMPLEMENTATION
  * IS FREE FROM ANY CLAIMS OF INFRINGEMENT, AND YOU ARE RESPONSIBLE
@@ -9,10 +9,15 @@
  * ANY WARRANTIES OR REPRESENTATIONS THAT THIS IMPLEMENTATION IS FREE
  * FROM CLAIMS OF INFRINGEMENT, IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.
- * 
+ *
  * This demo code is the starting point of Lab 3 of the ESDC course
  * UPC Telecom School, Barcelona
  * J. Altet/F. Moll, 2019
+ *
+ * Modifiyed in order to create the ampliable for the Lab3 by
+ * Guillem Llados Gomez
+ * Sebastien Kanj Bongard
+ * May 2019
  *
  */
 
@@ -23,9 +28,16 @@
 #include "xil_printf.h"
 #include "lwip/init.h"
 
+
 int main_thread();
 void print_headers();
 void print_echo_app_header();
+
+struct AMessage
+ {
+    int buttonValue;
+    int swsValue;
+ };
 
 #define THREAD_STACKSIZE 2048 // Empirically chosen
 
@@ -105,7 +117,8 @@ void network_init()
 }
 
 void tx_data(void *); // Server thread, defined in tx_data.c
-void rx_data(void *); // Client thread, defined in rx_data.c
+void rx_data(QueueHandle_t *); // Client thread, defined in rx_data.c
+void draw_square(QueueHandle_t *); //drawing thread
 
 int main_thread()
 {
@@ -114,14 +127,26 @@ int main_thread()
     network_init(); // Call network initialization function
 
     print_headers();
-    
+
+    QueueHandle_t xQueueCreate( 10, 5 );
+
+    xQueue = xQueueCreate( 10, sizeof( struct AMessage * ) );
+    if( xQueue == 0 )
+    {
+        return -1;
+    }
+
     sys_thread_new("tx_data", tx_data, 0,
         THREAD_STACKSIZE,
         DEFAULT_THREAD_PRIO);
 
-    sys_thread_new("rx_data", rx_data, 0,
+    sys_thread_new("rx_data", rx_data, &xQueue,
                 THREAD_STACKSIZE,
                 DEFAULT_THREAD_PRIO);
+
+    sys_thread_new("draw_square", draw_square, &xQueue,
+                    THREAD_STACKSIZE,
+                    DEFAULT_THREAD_PRIO);
 
     vTaskDelete(NULL);
 
@@ -177,6 +202,3 @@ void vApplicationSetupHardware( void )
 {
 
 }
-
-
-
